@@ -96,8 +96,10 @@ export function useWeatherSearch(defaultLocation: string = 'New York') {
       setError(errorMessage);
       
       // If we have cached data, keep showing it
-      if (cachedData) {
-        setWeather(cachedData);
+      const cachedWeather = getCachedWeather(cacheKey);
+      if (cachedWeather && isWeatherData(cachedWeather)) {
+        setWeather(cachedWeather);
+        setLocation(cachedWeather.location.name);
       }
     } finally {
       setIsLoading(false);
@@ -120,7 +122,7 @@ export function useWeatherSearch(defaultLocation: string = 'New York') {
     const cacheKey = `weather_coords_${lat}_${lon}`;
     const cachedData = getCachedWeather(cacheKey);
     
-    if (cachedData) {
+    if (cachedData && isWeatherData(cachedData)) {
       setWeather(cachedData);
       setLocation(cachedData.location.name);
       setIsLoading(false);
@@ -131,7 +133,7 @@ export function useWeatherSearch(defaultLocation: string = 'New York') {
       const data = await fetchWithRetry(
         async () => {
           const result = await getWeatherByCoordinates(lat, lon);
-          if (!result) {
+          if (!result || !isWeatherData(result)) {
             throw new Error('No weather data received');
           }
           return result;
@@ -147,7 +149,7 @@ export function useWeatherSearch(defaultLocation: string = 'New York') {
       setError(errorMessage);
       
       // If we have cached data, keep showing it
-      if (cachedData) {
+      if (cachedData && isWeatherData(cachedData)) {
         setWeather(cachedData);
         setLocation(cachedData.location.name);
       }
