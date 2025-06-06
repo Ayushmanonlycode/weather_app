@@ -5,7 +5,7 @@ import { useState, useEffect, useCallback } from 'react';
 interface NetworkState {
   isOnline: boolean;
   isReconnecting: boolean;
-  networkType: 'wifi' | 'cellular' | 'ethernet' | 'none' | 'unknown';
+  networkType: 'bluetooth' | 'cellular' | 'ethernet' | 'none' | 'wifi' | 'wimax' | 'other' | 'unknown';
   downlink: number | null;
   effectiveType: 'slow-2g' | '2g' | '3g' | '4g' | null;
   rtt: number | null;
@@ -29,7 +29,8 @@ export function useNetworkStatus() {
   const RECONNECT_DELAY = 1000;
 
   const updateNetworkInfo = useCallback(() => {
-    if (!navigator.connection) {
+    const connection = (navigator as any).connection;
+    if (!connection) {
       setState(prev => ({
         ...prev,
         networkType: 'unknown',
@@ -41,7 +42,6 @@ export function useNetworkStatus() {
       return;
     }
 
-    const connection = navigator.connection;
     setState(prev => ({
       ...prev,
       networkType: connection.type || 'unknown',

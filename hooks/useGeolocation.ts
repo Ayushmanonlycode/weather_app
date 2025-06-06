@@ -23,10 +23,10 @@ interface GeolocationOptions {
 
 const DEFAULT_OPTIONS: GeolocationOptions = {
   enableHighAccuracy: true,
-  timeout: 5000,
-  maximumAge: 0,
+  timeout: 10000,
+  maximumAge: 30000,
   retryCount: 3,
-  retryDelay: 1000,
+  retryDelay: 2000,
 };
 
 export function useGeolocation(options: GeolocationOptions = {}) {
@@ -70,13 +70,13 @@ export function useGeolocation(options: GeolocationOptions = {}) {
         permissionDenied = true;
         break;
       case error.POSITION_UNAVAILABLE:
-        errorMessage = 'Location information is unavailable';
+        errorMessage = 'Location information is unavailable. Please check your GPS settings.';
         break;
       case error.TIMEOUT:
-        errorMessage = 'Location request timed out';
+        errorMessage = 'Location request timed out. Please check your GPS signal and try again.';
         break;
       default:
-        errorMessage = 'An unknown error occurred';
+        errorMessage = 'An unknown error occurred while getting your location.';
         break;
     }
 
@@ -87,9 +87,11 @@ export function useGeolocation(options: GeolocationOptions = {}) {
       permissionDenied,
     }));
 
-    // Retry logic
+    // Retry logic with exponential backoff
     if (retryCount < (mergedOptions.retryCount || 0)) {
       setRetryCount(prev => prev + 1);
+      const baseDelay = mergedOptions.retryDelay || 2000; // Default to 2000ms if not specified
+      const delay = baseDelay * Math.pow(2, retryCount);
       setTimeout(() => {
         setState(prev => ({ ...prev, loading: true }));
         navigator.geolocation.getCurrentPosition(
@@ -97,7 +99,7 @@ export function useGeolocation(options: GeolocationOptions = {}) {
           handleError,
           mergedOptions
         );
-      }, mergedOptions.retryDelay);
+      }, delay);
     }
   }, [mergedOptions, retryCount, handleSuccess]);
 
