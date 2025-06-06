@@ -4,8 +4,8 @@ This is a weather forecast application built with Next.js, React, and Tailwind C
 
 ## Tech Stack
 
-- **Framework:** Next.js 14 with App Router
-- **UI Library:** React 18
+- **Framework:** Next.js 13.5.1 with App Router
+- **UI Library:** React 18.2.0
 - **Styling:** Tailwind CSS with shadcn/ui components
 - **State Management:** React Context API
 - **Data Visualization:** Recharts
