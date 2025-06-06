@@ -11,8 +11,11 @@ This is a weather forecast application built with Next.js, React, and Tailwind C
 - **Data Visualization:** Recharts
 - **Type Safety:** TypeScript
 - **API Integration:** Weather API
-- **PWA Support:** Service Workers
-- **Development Tools:** ESLint, PostCSS
+- **PWA Support:** Service Workers, Web App Manifest
+- **Development Tools:**
+  - ESLint 8.49.0
+  - PostCSS 8.4.30
+  - Autoprefixer 10.4.15
 
 ## Project Structure
 
