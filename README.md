@@ -6,13 +6,22 @@ This is a weather forecast application built with Next.js, React, and Tailwind C
 
 - **Framework:** Next.js 13.5.1 with App Router
 - **UI Library:** React 18.2.0
-- **Styling:** Tailwind CSS with shadcn/ui components
+- **Styling:** 
+  - Tailwind CSS 3.3.3
+  - shadcn/ui components
+  - Radix UI primitives
 - **State Management:** React Context API
-- **Data Visualization:** Recharts
-- **Type Safety:** TypeScript
+- **Data Visualization:** Recharts 2.10.3
+- **Type Safety:** TypeScript 5.2.2
 - **API Integration:** Weather API
-- **PWA Support:** Service Workers
-- **Development Tools:** ESLint, PostCSS
+- **Date Handling:** date-fns 2.30.0
+- **PWA Support:** 
+  - Service Workers
+  - Web App Manifest
+- **Development Tools:** 
+  - ESLint 8.49.0
+  - PostCSS 8.4.30
+  - Autoprefixer 10.4.15
 
 ## Project Structure
 
