@@ -27,7 +27,7 @@ export function useWeatherSearch(defaultLocation: string = 'New York') {
   const getCachedWeather = (key: string): WeatherData | null => {
     const cached = cache.get(key);
     if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
-      return cached.data;
+      return isWeatherData(cached.data) ? cached.data : null;
     }
     cache.delete(key);
     return null;
@@ -76,8 +76,9 @@ export function useWeatherSearch(defaultLocation: string = 'New York') {
     const cacheKey = `weather_${searchLocation}`;
     const cachedData = getCachedWeather(cacheKey);
     
-    if (cachedData) {
+    if (cachedData && isWeatherData(cachedData)) {
       setWeather(cachedData);
+      setLocation(cachedData.location.name);
       setIsLoading(false);
       return;
     }
