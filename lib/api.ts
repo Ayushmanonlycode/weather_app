@@ -1,7 +1,6 @@
 import { WeatherData } from '@/types';
 
 const WEATHER_API_KEY = process.env.NEXT_PUBLIC_WEATHER_API_KEY || 'demo_key';
-console.log('API Key being used:', WEATHER_API_KEY); // Debug log
 const BASE_URL = 'https://api.openweathermap.org';
 
 export interface CitySuggestion {
@@ -10,6 +9,20 @@ export interface CitySuggestion {
   region: string;
   lat: number;
   lon: number;
+}
+
+// Utility function for temperature conversion
+function celsiusToFahrenheit(celsius: number): number {
+  return celsius * 9/5 + 32;
+}
+
+// Utility function for consistent error handling
+function handleApiError(error: any, context: string): never {
+  console.error(`Error in ${context}:`, error);
+  if (error instanceof Error) {
+    throw error;
+  }
+  throw new Error(`Failed to ${context}. Please try again.`);
 }
 
 export async function getCitySuggestions(query: string): Promise<CitySuggestion[]> {
@@ -22,8 +35,7 @@ export async function getCitySuggestions(query: string): Promise<CitySuggestion[
 
     if (!response.ok) {
       const error = await response.json();
-       console.error('Error fetching city suggestions:', error);
-       return []; // Return empty array on error
+      throw new Error(error.message || 'Failed to fetch city suggestions');
     }
 
     const data = await response.json();
@@ -35,8 +47,7 @@ export async function getCitySuggestions(query: string): Promise<CitySuggestion[
       lon: city.lon,
     }));
   } catch (error) {
-    console.error('Error fetching city suggestions:', error);
-    return [];
+    handleApiError(error, 'fetch city suggestions');
   }
 }
 
@@ -51,14 +62,12 @@ async function fetchWeatherByCoordsInternal(
 
     if (!response.ok) {
       const error = await response.json();
-       throw new Error(error.message || 'Failed to fetch weather data. Please try again.');
+      throw new Error(error.message || 'Failed to fetch weather data');
     }
 
-    const data = await response.json();
-    return data;
+    return await response.json();
   } catch (error) {
-    console.error('Error fetching weather data:', error);
-    throw error; // Re-throw to handle in the hook
+    handleApiError(error, 'fetch weather data');
   }
 }
 
@@ -72,7 +81,6 @@ export async function getWeatherByLocation(
   }
   
   const { name, country, region } = suggestions[0];
-  
   const weatherData = await fetchWeatherByCoordsInternal(suggestions[0].lat, suggestions[0].lon);
 
   return transformOpenWeatherResponse(weatherData, { name, country, region });
@@ -82,26 +90,24 @@ export async function getWeatherByCoordinates(
   lat: number,
   lon: number
 ): Promise<WeatherData | null> {
-   let locationName = 'Unknown Location';
-   try {
-      const geoResponse = await fetch(
-         `${BASE_URL}/geo/1.0/reverse?lat=${lat}&lon=${lon}&limit=1&appid=${WEATHER_API_KEY}`
-      );
-      if (geoResponse.ok) {
-         const geoData = await geoResponse.json();
-         if (geoData && geoData.length > 0) {
-            locationName = `${geoData[0].name}, ${geoData[0].country}`;
-             if (geoData[0].state) {
-                 locationName = `${geoData[0].name}, ${geoData[0].state}, ${geoData[0].country}`;
-             }
-         }
+  let locationName = 'Unknown Location';
+  try {
+    const geoResponse = await fetch(
+      `${BASE_URL}/geo/1.0/reverse?lat=${lat}&lon=${lon}&limit=1&appid=${WEATHER_API_KEY}`
+    );
+    if (geoResponse.ok) {
+      const geoData = await geoResponse.json();
+      if (geoData && geoData.length > 0) {
+        locationName = geoData[0].state
+          ? `${geoData[0].name}, ${geoData[0].state}, ${geoData[0].country}`
+          : `${geoData[0].name}, ${geoData[0].country}`;
       }
-   } catch (error) {
-      console.error('Error fetching location name for coordinates:', error);
-   }
+    }
+  } catch (error) {
+    console.error('Error fetching location name for coordinates:', error);
+  }
 
   const weatherData = await fetchWeatherByCoordsInternal(lat, lon);
-
   return transformOpenWeatherResponse(weatherData, { name: locationName, country: '', region: '' });
 }
 
@@ -114,103 +120,107 @@ function getWindDirection(degrees: number): string {
 
 // Function to transform OpenWeatherMap API response to the WeatherData interface
 function transformOpenWeatherResponse(apiData: any, locationInfo: { name: string, country: string, region: string }): WeatherData {
-   // Group data by day
-   const dailyData = new Map<string, any[]>();
-   apiData.list.forEach((item: any) => {
-      const date = new Date(item.dt * 1000);
-      const day = date.toISOString().split('T')[0];
-      if (!dailyData.has(day)) {
-         dailyData.set(day, []);
-      }
-      dailyData.get(day)?.push(item);
-   });
+  // Group data by day
+  const dailyData = new Map<string, any[]>();
+  apiData.list.forEach((item: any) => {
+    const date = new Date(item.dt * 1000);
+    const day = date.toISOString().split('T')[0];
+    if (!dailyData.has(day)) {
+      dailyData.set(day, []);
+    }
+    dailyData.get(day)?.push(item);
+  });
 
-   // Create daily forecast (5 days)
-   const daily = Array.from(dailyData.entries())
-      .slice(0, 5) // Only take first 5 days
-      .map(([day, items]) => {
-         // Find the item closest to noon for the day's forecast
-         const noonItem = items.reduce((closest, current) => {
-            const currentHour = new Date(current.dt * 1000).getHours();
-            const closestHour = new Date(closest.dt * 1000).getHours();
-            return Math.abs(currentHour - 12) < Math.abs(closestHour - 12) ? current : closest;
-         });
-
-         // Get the most common weather condition for the day
-         const weatherCounts = new Map<number, number>();
-         items.forEach((item: any) => {
-            const code = item.weather[0].id;
-            weatherCounts.set(code, (weatherCounts.get(code) || 0) + 1);
-         });
-         const representativeCondition = Array.from(weatherCounts.entries())
-            .sort((a, b) => b[1] - a[1])[0][0];
-
-         return {
-            date: day,
-            day: {
-               maxtemp_c: Math.max(...items.map((item: any) => item.main.temp_max)),
-               maxtemp_f: Math.max(...items.map((item: any) => item.main.temp_max * 9/5 + 32)),
-               mintemp_c: Math.min(...items.map((item: any) => item.main.temp_min)),
-               mintemp_f: Math.min(...items.map((item: any) => item.main.temp_min * 9/5 + 32)),
-               avgtemp_c: items.reduce((sum: number, item: any) => sum + item.main.temp, 0) / items.length,
-               avgtemp_f: items.reduce((sum: number, item: any) => sum + (item.main.temp * 9/5 + 32), 0) / items.length,
-               condition: {
-                  text: noonItem.weather[0].description,
-                  icon: noonItem.weather[0].icon,
-                  code: representativeCondition,
-               },
-               daily_chance_of_rain: Math.round(
-                  items.reduce((sum: number, item: any) => sum + (item.pop * 100), 0) / items.length
-               ),
-               daily_chance_of_snow: 0,
-            },
-            hour: items.map((item: any) => ({
-               time: new Date(item.dt * 1000).toISOString(),
-               temp_c: item.main.temp,
-               temp_f: item.main.temp * 9/5 + 32,
-               condition: {
-                  text: item.weather[0].description,
-                  icon: item.weather[0].icon,
-                  code: item.weather[0].id,
-               },
-               chance_of_rain: Math.round(item.pop * 100),
-            })),
-         };
+  // Create daily forecast (5 days)
+  const daily = Array.from(dailyData.entries())
+    .slice(0, 5)
+    .map(([day, items]) => {
+      // Find the item closest to noon for the day's forecast
+      const noonItem = items.reduce((closest, current) => {
+        const currentHour = new Date(current.dt * 1000).getHours();
+        const closestHour = new Date(closest.dt * 1000).getHours();
+        return Math.abs(currentHour - 12) < Math.abs(closestHour - 12) ? current : closest;
       });
-   
-   const currentWeatherItem = apiData.list[0];
 
-   return {
-      location: {
-         name: locationInfo.name,
-         region: locationInfo.region,
-         country: locationInfo.country,
-         lat: apiData.city.coord.lat,
-         lon: apiData.city.coord.lon,
-         localtime: new Date(currentWeatherItem.dt * 1000).toISOString().replace('T', ' ').substring(0, 16),
+      // Get the most common weather condition for the day
+      const weatherCounts = new Map<number, number>();
+      items.forEach((item: any) => {
+        const code = item.weather[0].id;
+        weatherCounts.set(code, (weatherCounts.get(code) || 0) + 1);
+      });
+      const representativeCondition = Array.from(weatherCounts.entries())
+        .sort((a, b) => b[1] - a[1])[0][0];
+
+      const maxTempC = Math.max(...items.map((item: any) => item.main.temp_max));
+      const minTempC = Math.min(...items.map((item: any) => item.main.temp_min));
+      const avgTempC = items.reduce((sum: number, item: any) => sum + item.main.temp, 0) / items.length;
+
+      return {
+        date: day,
+        day: {
+          maxtemp_c: maxTempC,
+          maxtemp_f: celsiusToFahrenheit(maxTempC),
+          mintemp_c: minTempC,
+          mintemp_f: celsiusToFahrenheit(minTempC),
+          avgtemp_c: avgTempC,
+          avgtemp_f: celsiusToFahrenheit(avgTempC),
+          condition: {
+            text: noonItem.weather[0].description,
+            icon: noonItem.weather[0].icon,
+            code: representativeCondition,
+          },
+          daily_chance_of_rain: Math.round(
+            items.reduce((sum: number, item: any) => sum + (item.pop * 100), 0) / items.length
+          ),
+          daily_chance_of_snow: 0,
+        },
+        hour: items.map((item: any) => ({
+          time: new Date(item.dt * 1000).toISOString(),
+          temp_c: item.main.temp,
+          temp_f: celsiusToFahrenheit(item.main.temp),
+          condition: {
+            text: item.weather[0].description,
+            icon: item.weather[0].icon,
+            code: item.weather[0].id,
+          },
+          chance_of_rain: Math.round(item.pop * 100),
+        })),
+      };
+    });
+ 
+  const currentWeatherItem = apiData.list[0];
+
+  return {
+    location: {
+      name: locationInfo.name,
+      region: locationInfo.region,
+      country: locationInfo.country,
+      lat: apiData.city.coord.lat,
+      lon: apiData.city.coord.lon,
+      localtime: new Date(currentWeatherItem.dt * 1000).toISOString().replace('T', ' ').substring(0, 16),
+    },
+    current: {
+      temp_c: currentWeatherItem.main.temp,
+      temp_f: celsiusToFahrenheit(currentWeatherItem.main.temp),
+      condition: {
+        text: currentWeatherItem.weather[0].description,
+        icon: currentWeatherItem.weather[0].icon,
+        code: currentWeatherItem.weather[0].id,
       },
-      current: {
-         temp_c: currentWeatherItem.main.temp,
-         temp_f: currentWeatherItem.main.temp * 9/5 + 32,
-         condition: {
-            text: currentWeatherItem.weather[0].description,
-            icon: currentWeatherItem.weather[0].icon,
-            code: currentWeatherItem.weather[0].id,
-         },
-         wind_kph: currentWeatherItem.wind.speed * 3.6,
-         wind_mph: currentWeatherItem.wind.speed * 2.237,
-         wind_dir: getWindDirection(currentWeatherItem.wind.deg),
-         pressure_mb: currentWeatherItem.main.pressure,
-         precip_mm: currentWeatherItem.rain?.['3h'] || 0,
-         humidity: currentWeatherItem.main.humidity,
-         cloud: currentWeatherItem.clouds.all,
-         feelslike_c: currentWeatherItem.main.feels_like,
-         feelslike_f: currentWeatherItem.main.feels_like * 9/5 + 32,
-         uv: 0,
-         gust_kph: currentWeatherItem.wind.gust * 3.6,
-         gust_mph: currentWeatherItem.wind.gust * 2.237,
-         visibility_km: currentWeatherItem.visibility / 1000,
-      },
-      forecast: daily,
-   };
+      wind_kph: currentWeatherItem.wind.speed * 3.6,
+      wind_mph: currentWeatherItem.wind.speed * 2.237,
+      wind_dir: getWindDirection(currentWeatherItem.wind.deg),
+      humidity: currentWeatherItem.main.humidity,
+      feelslike_c: currentWeatherItem.main.feels_like,
+      feelslike_f: celsiusToFahrenheit(currentWeatherItem.main.feels_like),
+      uv: 0, // Not provided by OpenWeatherMap
+      pressure_mb: currentWeatherItem.main.pressure,
+      visibility_km: currentWeatherItem.visibility / 1000,
+      precip_mm: currentWeatherItem.rain?.['3h'] || 0,
+      cloud: currentWeatherItem.clouds.all,
+      gust_kph: currentWeatherItem.wind.gust ? currentWeatherItem.wind.gust * 3.6 : 0,
+      gust_mph: currentWeatherItem.wind.gust ? currentWeatherItem.wind.gust * 2.237 : 0,
+    },
+    forecast: daily,
+  };
 }

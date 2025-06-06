@@ -9,7 +9,7 @@ import { TemperatureUnitToggle } from '@/components/ui/temperature-unit-toggle';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { useNetworkStatus } from '@/hooks/useNetworkStatus';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, MapPin, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -27,7 +27,6 @@ export const WeatherApp: FC = () => {
   } = useWeatherSearch();
   
   const { latitude, longitude, loading: geoLoading, error: geoError, permissionDenied } = useGeolocation();
-  const { toast } = useToast();
   const isOnline = useNetworkStatus();
   
   // Get weather for user's location on initial load if geolocation is available
@@ -40,14 +39,12 @@ export const WeatherApp: FC = () => {
   // Show error toast if geolocation fails
   useEffect(() => {
     if (geoError && !geoLoading) {
-      toast({
-        title: 'Location Access',
-        description: geoError,
-        variant: permissionDenied ? 'default' : 'destructive',
+      toast(geoError, {
+        description: permissionDenied ? 'Please allow location access in your browser settings' : undefined,
         duration: permissionDenied ? 10000 : 5000,
       });
     }
-  }, [geoError, geoLoading, toast, permissionDenied]);
+  }, [geoError, geoLoading, permissionDenied]);
 
   const handleRetryLocation = () => {
     if (latitude && longitude && isOnline) {
