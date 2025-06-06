@@ -37,12 +37,23 @@ export function useWeatherSearch(defaultLocation: string = 'New York') {
     cache.set(key, { data, timestamp: Date.now() });
   };
 
+  const isWeatherData = (data: any): data is WeatherData => {
+    return data && 
+           typeof data === 'object' && 
+           'location' in data && 
+           'current' in data && 
+           'forecast' in data;
+  };
+
   const fetchWithRetry = async (
-    fetchFn: () => Promise<WeatherData>,
+    fetchFn: () => Promise<WeatherData | null>,
     retryKey: string
   ): Promise<WeatherData> => {
     try {
       const data = await fetchFn();
+      if (!data || !isWeatherData(data)) {
+        throw new Error('Invalid weather data received');
+      }
       setCachedWeather(retryKey, data);
       setRetryCount(0);
       return data;
@@ -117,13 +128,17 @@ export function useWeatherSearch(defaultLocation: string = 'New York') {
     
     try {
       const data = await fetchWithRetry(
-        () => getWeatherByCoordinates(lat, lon),
+        async () => {
+          const result = await getWeatherByCoordinates(lat, lon);
+          if (!result) {
+            throw new Error('No weather data received');
+          }
+          return result;
+        },
         cacheKey
       );
-      if (data) {
-        setWeather(data);
-        setLocation(data.location.name);
-      }
+      setWeather(data);
+      setLocation(data.location.name);
     } catch (err) {
       const errorMessage = err instanceof Error 
         ? err.message 
