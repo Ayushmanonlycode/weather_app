@@ -77,8 +77,8 @@ export function useWeatherSearch(defaultLocation: string = 'New York') {
     const cachedData = getCachedWeather(cacheKey);
     
     if (cachedData && isWeatherData(cachedData)) {
-      setWeather(cachedData);
-      setLocation(cachedData.location.name);
+      setWeather(cachedData as WeatherData);
+      setLocation((cachedData as WeatherData).location.name);
       setIsLoading(false);
       return;
     }
@@ -98,8 +98,8 @@ export function useWeatherSearch(defaultLocation: string = 'New York') {
       // If we have cached data, keep showing it
       const cachedWeather = getCachedWeather(cacheKey);
       if (cachedWeather && isWeatherData(cachedWeather)) {
-        setWeather(cachedWeather);
-        setLocation(cachedWeather.location.name);
+        setWeather(cachedWeather as WeatherData);
+        setLocation((cachedWeather as WeatherData).location.name);
       }
     } finally {
       setIsLoading(false);
@@ -123,8 +123,8 @@ export function useWeatherSearch(defaultLocation: string = 'New York') {
     const cachedData = getCachedWeather(cacheKey);
     
     if (cachedData && isWeatherData(cachedData)) {
-      setWeather(cachedData);
-      setLocation(cachedData.location.name);
+      setWeather(cachedData as WeatherData);
+      setLocation((cachedData as WeatherData).location.name);
       setIsLoading(false);
       return;
     }
@@ -150,8 +150,8 @@ export function useWeatherSearch(defaultLocation: string = 'New York') {
       
       // If we have cached data, keep showing it
       if (cachedData && isWeatherData(cachedData)) {
-        setWeather(cachedData);
-        setLocation(cachedData.location.name);
+        setWeather(cachedData as WeatherData);
+        setLocation((cachedData as WeatherData).location.name);
       }
     } finally {
       setIsLoading(false);
