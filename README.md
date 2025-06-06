@@ -50,8 +50,8 @@ This is a weather forecast application built with Next.js, React, and Tailwind C
 1.  **Clone the repository:**
 
     ```bash
-    git clone <your-repo-url>
-    cd <your-repo-directory>
+    git clone https://github.com/Ayushmanonlycode/weather_app
+    cd weather_app
     ```
 
 2.  **Install dependencies:**
