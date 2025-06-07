@@ -78,7 +78,7 @@ export function useWeatherSearch(defaultLocation: string = 'New York') {
     
     if (cachedData && isWeatherData(cachedData)) {
       setWeather(cachedData as WeatherData);
-      setLocation((cachedData as WeatherData).location.name);
+      setLocation(searchLocation);
       setIsLoading(false);
       return;
     }
@@ -89,6 +89,7 @@ export function useWeatherSearch(defaultLocation: string = 'New York') {
         cacheKey
       );
       setWeather(data);
+      setLocation(searchLocation);
     } catch (err) {
       const errorMessage = err instanceof Error 
         ? err.message 
@@ -99,7 +100,7 @@ export function useWeatherSearch(defaultLocation: string = 'New York') {
       const cachedWeather = getCachedWeather(cacheKey);
       if (cachedWeather && isWeatherData(cachedWeather)) {
         setWeather(cachedWeather as WeatherData);
-        setLocation((cachedWeather as WeatherData).location.name);
+        setLocation(searchLocation);
       }
     } finally {
       setIsLoading(false);

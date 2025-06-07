@@ -106,8 +106,9 @@ export const WeatherSearch: FC<WeatherSearchProps> = ({
   
   const isLocationFavorite = preferences.favoriteLocations.includes(location);
   
-  const toggleFavorite = () => {
-    if (disabled) return;
+  const toggleFavorite = (e: React.MouseEvent) => {
+    e.preventDefault(); // Prevent form submission
+    if (disabled || !location) return;
     
     if (isLocationFavorite) {
       removeFavoriteLocation(location);

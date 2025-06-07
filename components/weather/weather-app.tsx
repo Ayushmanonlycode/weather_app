@@ -36,6 +36,13 @@ export const WeatherApp: FC = () => {
     permissionDenied
   } = useGeolocation();
   
+  // Update location when weather data changes
+  useEffect(() => {
+    if (weather?.location?.name) {
+      setLocation(weather.location.name);
+    }
+  }, [weather]);
+
   // Get weather for user's location on initial load if geolocation is available
   useEffect(() => {
     if (latitude && longitude && !isGeoLoading && !geoError && isOnline) {
