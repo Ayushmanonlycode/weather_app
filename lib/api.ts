@@ -172,6 +172,8 @@ function getWindDirection(degrees: number): string {
 
 // Function to transform OpenWeatherMap API response to the WeatherData interface
 function transformOpenWeatherResponse(apiData: any, locationInfo: { name: string, country: string, region: string }): WeatherData {
+  console.log('Raw API response:', apiData);
+  
   // Group data by day
   const dailyData = new Map<string, any[]>();
   apiData.list.forEach((item: any) => {
@@ -202,6 +204,8 @@ function transformOpenWeatherResponse(apiData: any, locationInfo: { name: string
       });
       const representativeCondition = Array.from(weatherCounts.entries())
         .sort((a, b) => b[1] - a[1])[0][0];
+
+      console.log('Day forecast condition code:', representativeCondition);
 
       const maxTempC = Math.max(...items.map((item: any) => item.main.temp_max));
       const minTempC = Math.min(...items.map((item: any) => item.main.temp_min));
@@ -241,6 +245,7 @@ function transformOpenWeatherResponse(apiData: any, locationInfo: { name: string
     });
  
   const currentWeatherItem = apiData.list[0];
+  console.log('Current weather condition code:', currentWeatherItem.weather[0].id);
   
   return {
     location: {
