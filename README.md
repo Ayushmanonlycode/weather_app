@@ -1,6 +1,6 @@
 # Weather Forecast App
 
-This is a weather forecast application built with Next.js, React, and Tailwind CSS, featuring real-time weather data, hourly forecasts, 5-day forecasts with charting, theme toggling, location search, and PWA capabilities.
+This is a weather forecast application built with Next.js, React, and Tailwind CSS, featuring real-time weather data, hourly forecasts, 5-day forecasts with charting, theme toggling, location search, favorite locations, and PWA capabilities.
 
 ## Tech Stack
 
@@ -48,6 +48,7 @@ This is a weather forecast application built with Next.js, React, and Tailwind C
 - 📊 Interactive temperature charts
 - 🌙 Dark/Light theme support
 - 🔍 Location search with autocomplete
+- ⭐ Favorite locations (up to 3 locations)
 - 📱 PWA support for offline access
 - 📍 Geolocation support
 - 🌡️ Temperature unit conversion (Celsius/Fahrenheit)
@@ -118,7 +119,7 @@ This is a weather forecast application built with Next.js, React, and Tailwind C
 ## Key Decisions and Thought Processes
 
 ### State Management
-- **React Context API:** Used via the UserPreferencesContext and UserPreferencesProvider to manage global user preferences like theme and temperature unit.
+- **React Context API:** Used via the UserPreferencesContext and UserPreferencesProvider to manage global user preferences like theme, temperature unit, and favorite locations.
 - **Local State:** Used within various components and custom hooks to manage component-specific state.
 
 ### Styling
@@ -152,6 +153,14 @@ This is a weather forecast application built with Next.js, React, and Tailwind C
 - Recharts library for temperature visualization
 - Interactive charts with tooltips and legends
 - Unit conversion support
+
+### User Preferences
+- **Theme Toggle:** Switch between light and dark modes
+- **Temperature Unit:** Toggle between Celsius and Fahrenheit
+- **Favorite Locations:** Save up to 3 frequently accessed locations
+  - Click the star icon in the search bar to add/remove locations
+  - Quick access buttons appear below the search bar
+  - Persists across browser sessions using local storage
 
 ## Deployment
 
