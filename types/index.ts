@@ -1,9 +1,15 @@
+/**
+ * Represents the complete weather data structure returned by the API
+ */
 export interface WeatherData {
   location: Location;
   current: CurrentWeather;
   forecast: ForecastDay[];
 }
 
+/**
+ * Represents a geographical location
+ */
 export interface Location {
   name: string;
   region: string;
@@ -13,6 +19,9 @@ export interface Location {
   localtime: string;
 }
 
+/**
+ * Represents the current weather conditions
+ */
 export interface CurrentWeather {
   temp_c: number;
   temp_f: number;
@@ -23,7 +32,6 @@ export interface CurrentWeather {
   humidity: number;
   feelslike_c: number;
   feelslike_f: number;
-  uv: number;
   pressure_mb: number;
   visibility_km: number;
   precip_mm: number;
@@ -32,12 +40,18 @@ export interface CurrentWeather {
   gust_mph: number;
 }
 
+/**
+ * Represents weather condition information
+ */
 export interface WeatherCondition {
   text: string;
   icon: string;
   code: number;
 }
 
+/**
+ * Represents a day's weather forecast
+ */
 export interface ForecastDay {
   date: string;
   day: {
@@ -54,6 +68,9 @@ export interface ForecastDay {
   hour: HourForecast[];
 }
 
+/**
+ * Represents an hour's weather forecast
+ */
 export interface HourForecast {
   time: string;
   temp_c: number;
@@ -62,8 +79,33 @@ export interface HourForecast {
   chance_of_rain: number;
 }
 
+/**
+ * Represents user preferences for the application
+ */
 export interface UserPreferences {
   tempUnit: 'celsius' | 'fahrenheit';
   favoriteLocations: string[];
   theme: 'light' | 'dark' | 'system';
+}
+
+/**
+ * Represents an API error response
+ */
+export interface ApiError {
+  code: string;
+  message: string;
+  status: number;
+}
+
+/**
+ * Type guard to check if an object is a valid WeatherData
+ */
+export function isWeatherData(data: unknown): data is WeatherData {
+  return (
+    typeof data === 'object' &&
+    data !== null &&
+    'location' in data &&
+    'current' in data &&
+    'forecast' in data
+  );
 }

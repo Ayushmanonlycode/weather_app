@@ -9,9 +9,22 @@ const inter = Inter({ subsets: ['latin'] });
 export const metadata: Metadata = {
   title: 'Weather Forecast App',
   description: 'Check weather conditions and forecasts for locations worldwide',
+  manifest: '/manifest.json',
+  themeColor: '#000000',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'Weather App',
+  },
+  viewport: {
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 1,
+  },
   icons: {
-    icon: '/favicon.svg',
-    apple: '/favicon.svg',
+    icon: '/icons/icon-192x192.png',
+    apple: '/icons/icon-192x192.png',
+    shortcut: '/icons/icon-192x192.png',
   },
 };
 

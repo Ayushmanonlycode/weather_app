@@ -16,13 +16,20 @@ import {
 } from 'recharts';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
 import { formatDate } from '@/lib/utils';
+import { Loader2 } from 'lucide-react';
 
 interface ForecastDetailProps {
   forecast: ForecastDay[];
+  selectedDayIndex: number;
+  onDaySelect: (index: number) => void;
 }
 
-export const ForecastDetail: FC<ForecastDetailProps> = ({ forecast }) => {
-  const [selectedDayIndex, setSelectedDayIndex] = useState(0);
+export const ForecastDetail: FC<ForecastDetailProps> = ({ 
+  forecast,
+  selectedDayIndex,
+  onDaySelect
+}) => {
+  const [isLoading, setIsLoading] = useState(false);
   const { preferences } = useUserPreferences();
   const isMetric = preferences.temperatureUnit === 'celsius';
   const tempUnit = isMetric ? '°C' : '°F';
@@ -37,27 +44,34 @@ export const ForecastDetail: FC<ForecastDetailProps> = ({ forecast }) => {
   // Get hourly data for the selected day
   const selectedDayHourlyData = forecast[selectedDayIndex]?.hour || [];
 
+  // Handle day selection with loading state
+  const handleDaySelect = (index: number) => {
+    setIsLoading(true);
+    onDaySelect(index);
+    // Simulate a small delay for smooth transition
+    setTimeout(() => setIsLoading(false), 300);
+  };
+
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        {forecast.map((day, index) => (
-          <ForecastDayCard
-            key={day.date}
-            forecast={day}
-            isSelected={index === selectedDayIndex}
-            onClick={() => setSelectedDayIndex(index)}
-          />
-        ))}
-      </div>
-      
       {/* 5-Day Temperature Trend Chart */}
       <div className="w-full h-[300px] bg-background rounded-md p-4 shadow-lg">
         <h3 className="text-lg font-semibold mb-4">Temperature Trend (5 Days)</h3>
         <ResponsiveContainer width="100%" height="80%">
           <LineChart data={dailyChartData}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
-            <XAxis dataKey="date" tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} tickFormatter={(value) => `${value}${tempUnit}`} />
+            <XAxis 
+              dataKey="date" 
+              tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} 
+              axisLine={false} 
+              tickLine={false} 
+            />
+            <YAxis 
+              tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} 
+              axisLine={false} 
+              tickLine={false} 
+              tickFormatter={(value) => `${value}${tempUnit}`} 
+            />
             <Tooltip 
               contentStyle={{
                 backgroundColor: 'hsl(var(--background))',
@@ -69,19 +83,46 @@ export const ForecastDetail: FC<ForecastDetailProps> = ({ forecast }) => {
               formatter={(value: number) => `${value}${tempUnit}`}
             />
             <Legend />
-            <Line type="monotone" dataKey="maxTemp" name={`Max Temp (${tempUnit})`} stroke="hsl(var(--destructive))" activeDot={{ r: 6 }} />
-            <Line type="monotone" dataKey="minTemp" name={`Min Temp (${tempUnit})`} stroke="hsl(var(--primary))" activeDot={{ r: 6 }} />
+            <Line 
+              type="monotone" 
+              dataKey="maxTemp" 
+              name={`Max Temp (${tempUnit})`} 
+              stroke="hsl(var(--destructive))" 
+              strokeWidth={2}
+              dot={{ r: 4 }}
+              activeDot={{ r: 8 }}
+              animationDuration={1500}
+              animationEasing="ease-in-out"
+            />
+            <Line 
+              type="monotone" 
+              dataKey="minTemp" 
+              name={`Min Temp (${tempUnit})`} 
+              stroke="hsl(var(--primary))" 
+              strokeWidth={2}
+              dot={{ r: 4 }}
+              activeDot={{ r: 8 }}
+              animationDuration={1500}
+              animationEasing="ease-in-out"
+            />
           </LineChart>
         </ResponsiveContainer>
       </div>
 
       {/* Hourly Forecast Chart for Selected Day */}
-      {selectedDayHourlyData.length > 0 && (
-        <ForecastChart 
-          hourlyData={selectedDayHourlyData} 
-          title={`Hourly Forecast for ${formatDate(forecast[selectedDayIndex].date, 'EEEE, MMM d')}`} 
-        />
-      )}
+      <div className="relative">
+        {isLoading && (
+          <div className="absolute inset-0 bg-background/50 backdrop-blur-sm flex items-center justify-center z-10">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        )}
+        {selectedDayHourlyData.length > 0 && (
+          <ForecastChart 
+            hourlyData={selectedDayHourlyData} 
+            title={`Hourly Forecast for ${formatDate(forecast[selectedDayIndex].date, 'EEEE, MMM d')}`} 
+          />
+        )}
+      </div>
     </div>
   );
 };

@@ -40,16 +40,16 @@ export const ForecastDayCard: FC<ForecastDayCardProps> = ({
       }`}
       onClick={onClick}
     >
-      <CardContent className="p-4">
-        <h3 className="font-medium text-center">{formattedDate}</h3>
+      <CardContent className="p-3">
+        <h3 className="font-medium text-center text-sm">{formattedDate}</h3>
         
         <div className="flex justify-center my-2">
-          <WeatherIcon code={forecast.day.condition.code} size={36} />
+          <WeatherIcon code={forecast.day.condition.code} size={32} />
         </div>
         
         <div className="text-center">
           <p className="text-sm text-muted-foreground">{forecast.day.condition.text}</p>
-          <p className="font-semibold mt-1">
+          <p className="font-semibold mt-1 text-base">
             <span>{maxTemp}{tempUnit}</span>
             <span className="mx-1 text-muted-foreground">/</span>
             <span className="text-muted-foreground">{minTemp}{tempUnit}</span>
@@ -57,7 +57,7 @@ export const ForecastDayCard: FC<ForecastDayCardProps> = ({
         </div>
         
         {precipChance > 0 && (
-          <div className="flex items-center justify-center mt-2 text-sm">
+          <div className="flex items-center justify-center mt-1 text-sm">
             <Droplets className="h-3 w-3 mr-1" />
             <span>{precipChance}% {precipType}</span>
           </div>

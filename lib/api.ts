@@ -16,13 +16,12 @@ function celsiusToFahrenheit(celsius: number): number {
   return celsius * 9/5 + 32;
 }
 
-// Utility function for consistent error handling
-function handleApiError(error: any, context: string): never {
-  console.error(`Error in ${context}:`, error);
+function handleApiError(error: unknown, context: string): never {
+  console.error(`Error ${context}:`, error);
   if (error instanceof Error) {
-    throw error;
+    throw new Error(error.message);
   }
-  throw new Error(`Failed to ${context}. Please try again.`);
+  throw new Error(`An unexpected error occurred while ${context}`);
 }
 
 export async function getCitySuggestions(query: string): Promise<CitySuggestion[]> {
@@ -65,7 +64,8 @@ async function fetchWeatherByCoordsInternal(
       throw new Error(error.message || 'Failed to fetch weather data');
     }
 
-    return await response.json();
+    const weatherData = await response.json();
+    return weatherData;
   } catch (error) {
     handleApiError(error, 'fetch weather data');
   }
@@ -74,6 +74,58 @@ async function fetchWeatherByCoordsInternal(
 export async function getWeatherByLocation(
   location: string
 ): Promise<WeatherData | null> {
+  // Check if input is a ZIP code (any length of numbers)
+  const isZipCode = /^\d+$/.test(location);
+  
+  if (isZipCode) {
+    try {
+      // Try with IN (India) first for 6-digit codes
+      if (location.length === 6) {
+        const response = await fetch(
+          `${BASE_URL}/data/2.5/forecast?zip=${location},IN&appid=${WEATHER_API_KEY}&units=metric`
+        );
+
+        if (response.ok) {
+          const weatherData = await response.json();
+          return transformOpenWeatherResponse(weatherData, { 
+            name: weatherData.city.name, 
+            country: weatherData.city.country, 
+            region: '' 
+          });
+        }
+      }
+
+      // Try with US for 5-digit codes
+      if (location.length === 5) {
+        const response = await fetch(
+          `${BASE_URL}/data/2.5/forecast?zip=${location},US&appid=${WEATHER_API_KEY}&units=metric`
+        );
+
+        if (response.ok) {
+          const weatherData = await response.json();
+          return transformOpenWeatherResponse(weatherData, { 
+            name: weatherData.city.name, 
+            country: weatherData.city.country, 
+            region: '' 
+          });
+        }
+      }
+
+      // If all attempts fail, try city search
+      const suggestions = await getCitySuggestions(location);
+      if (suggestions && suggestions.length > 0) {
+        const { name, country, region } = suggestions[0];
+        const weatherData = await fetchWeatherByCoordsInternal(suggestions[0].lat, suggestions[0].lon);
+        return transformOpenWeatherResponse(weatherData, { name, country, region });
+      }
+
+      throw new Error(`Location not found: ${location}. Please check the spelling and try again.`);
+    } catch (error) {
+      handleApiError(error, 'fetch weather data for ZIP code');
+    }
+  }
+
+  // If not a ZIP code, proceed with city search
   const suggestions = await getCitySuggestions(location);
   
   if (!suggestions || suggestions.length === 0) {
@@ -189,7 +241,7 @@ function transformOpenWeatherResponse(apiData: any, locationInfo: { name: string
     });
  
   const currentWeatherItem = apiData.list[0];
-
+  
   return {
     location: {
       name: locationInfo.name,
@@ -213,7 +265,6 @@ function transformOpenWeatherResponse(apiData: any, locationInfo: { name: string
       humidity: currentWeatherItem.main.humidity,
       feelslike_c: currentWeatherItem.main.feels_like,
       feelslike_f: celsiusToFahrenheit(currentWeatherItem.main.feels_like),
-      uv: 0, // Not provided by OpenWeatherMap
       pressure_mb: currentWeatherItem.main.pressure,
       visibility_km: currentWeatherItem.visibility / 1000,
       precip_mm: currentWeatherItem.rain?.['3h'] || 0,

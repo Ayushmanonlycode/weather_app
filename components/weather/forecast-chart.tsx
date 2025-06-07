@@ -52,7 +52,7 @@ export const ForecastChart: FC<ForecastChartProps> = ({ hourlyData, title }) => 
   useEffect(() => {
     // Map all hourly data points without any filtering
     const allHourlyData = hourlyData.map(hour => ({
-      time: formatTime(hour.time, 'h a'),
+      time: formatTime(hour.time, 'H'),
       temp: isMetric ? hour.temp_c : hour.temp_f,
       originalTime: hour.time,
     }));

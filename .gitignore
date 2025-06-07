@@ -35,4 +35,7 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-.vercel
+# PWA
+public/sw.js.map
+public/workbox-*.js.map
+public/service-worker.js

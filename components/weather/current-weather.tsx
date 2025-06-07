@@ -25,10 +25,6 @@ export const CurrentWeather: FC<CurrentWeatherProps> = ({ current, location }) =
   
   const localTime = new Date(location.localtime);
   const formattedDate = formatDate(location.localtime, 'EEEE, MMMM d, yyyy');
-  const formattedTime = localTime.toLocaleTimeString([], { 
-    hour: '2-digit', 
-    minute: '2-digit' 
-  });
   
   return (
     <Card className={cn(
@@ -46,14 +42,23 @@ export const CurrentWeather: FC<CurrentWeatherProps> = ({ current, location }) =
                 </span>
               )}
             </h2>
-            <p className="text-sm text-muted-foreground">{formattedDate} | {formattedTime}</p>
+            <p className="text-sm text-muted-foreground">{formattedDate}</p>
           </div>
           
           <div className="flex items-center">
             <WeatherIcon code={current.condition.code} size={64} className="mr-4 text-foreground" />
             <div>
               <div className="text-5xl font-bold text-foreground">{Math.round(temperature)}{tempUnit}</div>
-              <p className="text-sm text-muted-foreground">{current.condition.text}</p>
+              <p className="text-sm font-semibold text-foreground capitalize">{current.condition.text}</p>
+              <p className="text-xs text-muted-foreground">
+                {current.condition.code >= 200 && current.condition.code < 300 ? 'Thunderstorm' :
+                 current.condition.code >= 300 && current.condition.code < 400 ? 'Drizzle' :
+                 current.condition.code >= 500 && current.condition.code < 600 ? 'Rain' :
+                 current.condition.code >= 600 && current.condition.code < 700 ? 'Snow' :
+                 current.condition.code >= 700 && current.condition.code < 800 ? 'Atmosphere' :
+                 current.condition.code === 800 ? 'Clear' :
+                 current.condition.code > 800 ? 'Clouds' : 'Unknown'}
+              </p>
             </div>
           </div>
         </div>
@@ -95,20 +100,6 @@ export const CurrentWeather: FC<CurrentWeatherProps> = ({ current, location }) =
           </div>
 
           <div className="flex items-center">
-            <Sun className="h-5 w-5 mr-2 text-foreground" />
-            <div>
-              <p className="text-sm text-muted-foreground">UV Index</p>
-              <p className="font-semibold text-foreground">{current.uv.toFixed(1)}</p>
-              <p className="text-xs text-muted-foreground">
-                {current.uv < 3 ? 'Low' : 
-                 current.uv < 6 ? 'Moderate' : 
-                 current.uv < 8 ? 'High' : 
-                 current.uv < 11 ? 'Very High' : 'Extreme'}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center">
             <Gauge className="h-5 w-5 mr-2 text-foreground" />
             <div>
               <p className="text-sm text-muted-foreground">Pressure</p>
@@ -141,9 +132,27 @@ export const CurrentWeather: FC<CurrentWeatherProps> = ({ current, location }) =
           <div className="flex items-center">
             <Cloud className="h-5 w-5 mr-2 text-foreground" />
             <div>
-              <p className="text-sm text-muted-foreground">Conditions</p>
-              <p className="font-semibold text-foreground">{current.condition.text}</p>
-              <p className="text-xs text-muted-foreground">Current</p>
+              <p className="text-sm text-muted-foreground">Cloud Coverage</p>
+              <p className="font-semibold text-foreground">{current.cloud}%</p>
+              <p className="text-xs text-muted-foreground">
+                {current.cloud < 25 ? 'Clear' :
+                 current.cloud < 50 ? 'Partly Cloudy' :
+                 current.cloud < 75 ? 'Mostly Cloudy' : 'Overcast'}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center">
+            <Wind className="h-5 w-5 mr-2 text-foreground" />
+            <div>
+              <p className="text-sm text-muted-foreground">Wind Gust</p>
+              <p className="font-semibold text-foreground">
+                {isMetric ? current.gust_kph.toFixed(1) : current.gust_mph.toFixed(1)} {windUnit}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {current.gust_kph > 50 ? 'Strong' :
+                 current.gust_kph > 30 ? 'Moderate' : 'Light'}
+              </p>
             </div>
           </div>
         </div>

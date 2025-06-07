@@ -8,12 +8,11 @@ import { cn } from '@/lib/utils';
 /**
  * ThemeToggle component for switching between light and dark themes
  * Features:
- * - Uses user preferences hook for state management
- * - Ghost variant button
- * - Icon size
- * - Animated icon transition
- * - Accessible with aria-label and screen reader text
- * - Smooth icon rotation and scaling animations
+ * - Constant black background with white text
+ * - Smooth hover effect
+ * - Accessible with high contrast ratio
+ * - Clear icon indication of current theme
+ * - Smooth transition animations
  */
 export function ThemeToggle() {
   const { preferences, toggleTheme } = useUserPreferences();
@@ -31,13 +30,23 @@ export function ThemeToggle() {
       size="icon"
       onClick={toggleTheme}
       className={cn(
-        "relative h-9 w-9 rounded-md",
-        isLight && 'text-white'
+        "relative h-9 w-9 rounded-md bg-black text-white hover:bg-gray-800 transition-colors duration-200",
+        "focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black"
       )}
       aria-label={`Switch to ${label} theme`}
     >
-      <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-      <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+      <Sun 
+        className={cn(
+          "h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all duration-300 text-white",
+          "dark:-rotate-90 dark:scale-0"
+        )} 
+      />
+      <Moon 
+        className={cn(
+          "absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all duration-300 text-white",
+          "dark:rotate-0 dark:scale-100"
+        )} 
+      />
       <span className="sr-only">{label} mode</span>
     </Button>
   );

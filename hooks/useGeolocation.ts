@@ -23,8 +23,8 @@ interface GeolocationOptions {
 
 const DEFAULT_OPTIONS: GeolocationOptions = {
   enableHighAccuracy: true,
-  timeout: 10000,
-  maximumAge: 30000,
+  timeout: 30000,
+  maximumAge: 60000,
   retryCount: 3,
   retryDelay: 2000,
 };
